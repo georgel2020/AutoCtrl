@@ -10,6 +10,7 @@ debug
 d
 ```
 ### Show console Window
+Console window is hidden by default. 
 ```
 window
 w
