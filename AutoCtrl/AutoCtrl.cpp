@@ -97,6 +97,8 @@ int main() {
 			return 0;
 		}
 		if (oper == "debug" || oper == "d") {
+			ShowWindow(GetConsoleWindow(), SW_SHOW);
+			debug = true;
 			break;
 		}
 		if (oper == "window" || oper == "w") {
