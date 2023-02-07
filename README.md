@@ -3,6 +3,12 @@ __Simple tool to simulate mouse and keyboard operation.__
 ## Usage
 Type commands in the `AutoCtrl.txt` file. 
 Each command has a full one and a shorter one. 
+### Enter debug mode
+Debug mode can show the cursor position on the window. 
+```
+debug
+d
+```
 ### Show console Window
 ```
 window
