@@ -3,18 +3,39 @@
 #include <fstream>
 #include <windows.h>
 #include <string>
+
+#define DEBUGMOUSE 1
+#define DEBUGKEY 2
+#define DEBUGNONE 0
+
 using namespace std;
+
+string oper;    // Command. 
+int x, y;    // Mouse X, Y. 
+int key, sleep;    // Keycode, time. 
+string command;    // Command line. 
+POINT position, lastPosition;    // Mouse position. 
+int keyCodePress;    // Virtual key code. 
+
+MSG msg = { 0 };    // Message queue. 
+
+int debug = DEBUGNONE;
+
+// Keyboard proc. 
+LRESULT CALLBACK KeybdProc(_In_ int nCode, _In_ WPARAM wParam, _In_ LPARAM lParam) {
+	KBDLLHOOKSTRUCT* keybdStruct = (KBDLLHOOKSTRUCT*)lParam;
+
+	if (keybdStruct->flags == 128 || keybdStruct->flags == 129)
+	{
+		system("cls");
+		printf("Key Code: %d", (int)keybdStruct->vkCode);
+	}
+
+	return CallNextHookEx(NULL, nCode, wParam, lParam);
+}
+
 int main() {
 	ifstream fin("AutoCtrl.txt");
-
-	string oper;    // Command. 
-	int x, y;    // Mouse X, Y. 
-	int key, time;    // Keycode, time. 
-	string command;    // Command line. 
-	POINT position, lastPosition;    // Mouse position. 
-	lastPosition.x = 0, lastPosition.y = 0;
-
-	bool debug = false;
 
 	ShowWindow(GetConsoleWindow(), SW_HIDE);    // Hide console window. 
 
@@ -89,16 +110,21 @@ int main() {
 			cout << "Command: " << command;
 		}
 		if (oper == "sleep" || oper == "s") {
-			fin >> time;
-			printf("Sleep: %dms", time);
-			Sleep(time);
+			fin >> sleep;
+			printf("Sleep: %dms", sleep);
+			Sleep(sleep);
 		}
 		if (oper == "exit" || oper == "e") {
 			return 0;
 		}
-		if (oper == "debug" || oper == "d") {
+		if (oper == "debugmouse" || oper == "dm") {
 			ShowWindow(GetConsoleWindow(), SW_SHOW);
-			debug = true;
+			debug = DEBUGMOUSE;
+			break;
+		}
+		if (oper == "debugkey" || oper == "dk") {
+			ShowWindow(GetConsoleWindow(), SW_SHOW);
+			debug = DEBUGKEY;
 			break;
 		}
 		if (oper == "window" || oper == "w") {
@@ -108,16 +134,38 @@ int main() {
 		printf("\n");
 	}
 
-	if (!debug)return 0;
+	if (debug == DEBUGNONE)return 0;
 
 	// Debug mode
-	while (true) {
-		GetCursorPos(&position);
-		if (position.x != lastPosition.x || position.y != lastPosition.y) {
-			system("cls");
-			printf("Cursor Position: \nX: %d, Y: %d\n", position.x, position.y);
-			Sleep(10);
-			lastPosition = position;
+	if (debug == DEBUGKEY) {
+		HHOOK keybdHook = 0;
+		keybdHook = SetWindowsHookEx(WH_KEYBOARD_LL, KeybdProc, GetModuleHandleA(NULL), NULL);    // Load keyboard hook. 
+
+		if (keybdHook == 0) {
+			printf("Error: Failed to load hook");
+			return 0;
+		}
+
+		while (1)
+		{
+			if (GetMessage(&msg, NULL, 0, 0)) {
+				TranslateMessage(&msg);
+				DispatchMessageW(&msg);
+			}
+		}
+	}
+
+	if (debug == DEBUGMOUSE) {
+		lastPosition.x = 0, lastPosition.y = 0;
+
+		while (true) {
+			GetCursorPos(&position);
+			if (position.x != lastPosition.x || position.y != lastPosition.y) {
+				system("cls");
+				printf("Cursor Position: \nX: %d, Y: %d\n", position.x, position.y);
+				Sleep(10);
+				lastPosition = position;
+			}
 		}
 	}
 }
